@@ -35,14 +35,14 @@ exports.user_sign_up = [
     .withMessage("Username must be less than 60 characters")
     .isAlphanumeric()
     .withMessage("username name must only contain letters and numbers")
+    .escape()
     .custom(async (value, { req }) => {
       const usernameExist = await User.findOne({ username: value });
 
       if (usernameExist) {
         throw new Error("Username is already taken");
       }
-    })
-    .escape(),
+    }),
   body("password", "Password must not be empty")
     .trim()
     .isLength({ min: 1 })
