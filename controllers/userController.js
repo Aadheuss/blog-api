@@ -1,6 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
+const { verifyUserJWT } = require("../config/jwt");
+const { verifyTokenJWT } = require("../config/jwt");
 
 const User = require("../models/user");
 
@@ -35,7 +37,7 @@ exports.user_sign_up = [
     .withMessage("username name must only contain letters and numbers")
     .custom(async (value, { req }) => {
       const usernameExist = await User.findOne({ username: value });
-      console.log({ value, usernameExist });
+
       if (usernameExist) {
         throw new Error("Username is already taken");
       }
@@ -77,5 +79,39 @@ exports.user_sign_up = [
         });
       });
     }
+  }),
+];
+
+exports.user_login = [
+  body("username", "Please enter your username")
+    .trim()
+    .isLength({ min: 1 })
+    .isLength({ max: 60 })
+    .withMessage("Username must be less than 60 characters")
+    .isAlphanumeric()
+    .withMessage("username name must only contain letters and numbers")
+    .escape(),
+  body("password", "Please enter your password")
+    .trim()
+    .isLength({ min: 1 })
+    .isLength({ max: 60 })
+    .withMessage("Password must be less than 60 characters")
+    .escape(),
+  verifyUserJWT,
+  asyncHandler(async (req, res, next) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: errors.errors.map((object) => {
+          return { msg: object.msg, path: object.path };
+        }),
+      });
+    }
+
+    res.json({
+      message: "Successfully logged in",
+      token: req.token,
+    });
   }),
 ];
