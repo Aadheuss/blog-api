@@ -28,7 +28,7 @@ exports.user_sign_up = [
     .optional({ values: "falsy" })
     .isISO8601()
     .toDate(),
-  body("username", "username must not be empty")
+  body("username", "Username must not be empty")
     .trim()
     .isLength({ min: 1 })
     .isLength({ max: 60 })
@@ -89,7 +89,7 @@ exports.user_login = [
     .isLength({ max: 60 })
     .withMessage("Username must be less than 60 characters")
     .isAlphanumeric()
-    .withMessage("username name must only contain letters and numbers")
+    .withMessage("Username name must only contain letters and numbers")
     .escape(),
   body("password", "Please enter your password")
     .trim()
