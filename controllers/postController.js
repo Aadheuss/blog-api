@@ -97,12 +97,14 @@ exports.post_get = [
 exports.post_update = [
   body("title", "Title must not be empty")
     .trim()
+    .optional({ values: "falsy" })
     .isLength({ min: 1 })
     .isLength({ max: 300 })
     .withMessage("Title must not exceed 300 characters")
     .escape(),
   body("content", "Blog content must not be empty")
     .trim()
+    .optional({ values: "falsy" })
     .isLength({ min: 100 })
     .withMessage("Blog contain must contain a minimum of 100 characters")
     .escape(),
@@ -131,17 +133,19 @@ exports.post_update = [
         if (req.user.user._id === currentPost.author.toString()) {
           const post = new Post({
             _id: req.params.id,
-            title: req.body.title,
-            content: req.body.content,
-            author: req.user.user._id,
+            title: req.body.title || currentPost.title,
+            content: req.body.content || currentPost.content,
+            author: currentPost.author,
             published:
-              typeof req.body.published === "boolean"
+              req.body.published === undefined
+                ? currentPost.published
+                : typeof req.body.published === "boolean"
                 ? req.body.published
                 : JSON.parse(req.body.published),
             time_stamp: currentPost.time_stamp,
           });
 
-          await post.save();
+          await Post.findByIdAndUpdate(req.params.id, post, {});
 
           res.json({
             message: "Successfully updated the post",
