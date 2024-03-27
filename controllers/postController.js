@@ -53,10 +53,7 @@ exports.post_create = [
 
 exports.post_get = [
   asyncHandler(async (req, res, next) => {
-    const post = await Post.findOne(
-      { _id: req.params.id },
-      "author title content time_stamp last_updated published"
-    )
+    const post = await Post.findOne({ _id: req.params.id }, "-__v")
       .populate("author", "username")
       .exec();
 
