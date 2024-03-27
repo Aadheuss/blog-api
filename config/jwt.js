@@ -3,27 +3,6 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 
-const verifyCallback = async (username, password, done) => {
-  try {
-    const user = await User.findOne({ username: username });
-
-    if (!user) {
-      return done(null, false, { message: "Incorrect username" });
-    }
-
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) {
-      // passwords do not match
-      return done(null, false, { message: "Incorrect password" });
-    }
-
-    return done(null, user);
-  } catch (err) {
-    return done(err);
-  }
-};
-
 exports.verifyUserJWT = async (req, res, next) => {
   try {
     const user = await User.findOne({ username: req.body.username });
@@ -64,7 +43,9 @@ exports.verifyTokenJWT = async (req, res, next) => {
     req.token = bearerToken;
     jwt.verify(req.token, process.env.SECRET, (err, authData) => {
       if (err) {
-        res.status(403).json({ err });
+        res
+          .status(err.status || 403)
+          .json({ message: err.message || "Unauthorized" });
       } else {
         const authShortData = {
           ...authData,
@@ -74,10 +55,8 @@ exports.verifyTokenJWT = async (req, res, next) => {
           },
         };
 
-        res.json({
-          message: "Authorized",
-          authShortData,
-        });
+        req.user = authShortData;
+        next();
       }
     });
   } else {
