@@ -177,3 +177,20 @@ exports.post_delete = [
     });
   }),
 ];
+
+// Get all published posts
+exports.posts_get = asyncHandler(async (req, res, next) => {
+  const posts = await Post.find({ published: true }, "-__v")
+    .populate("author", "username")
+    .exec();
+
+  if (!posts.length) {
+    return res.json({
+      message: "No post yet",
+    });
+  }
+  return res.json({
+    message: "Success",
+    posts: posts,
+  });
+});
