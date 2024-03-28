@@ -8,13 +8,17 @@ exports.verifyUserJWT = async (req, res, next) => {
     const user = await User.findOne({ username: req.body.username });
 
     if (!user) {
-      return res.status(400).json({ message: "Incorrect username" });
+      const err = new Error("Incorrect username");
+      err.status = 401;
+      return next(err);
     }
 
     const match = await bcrypt.compare(req.body.password, user.password);
 
     if (!match) {
-      return res.status(400).json({ message: "Incorrect password" });
+      const err = new Error("Incorrect password");
+      err.status = 401;
+      return next(err);
     }
 
     jwt.sign(
@@ -43,9 +47,8 @@ exports.verifyTokenJWT = async (req, res, next) => {
     req.token = bearerToken;
     jwt.verify(req.token, process.env.SECRET, (err, authData) => {
       if (err) {
-        res
-          .status(err.status || 403)
-          .json({ message: err.message || "Unauthorized" });
+        err.status = err.status || 401;
+        return next(err);
       } else {
         const authShortData = {
           ...authData,
@@ -60,6 +63,8 @@ exports.verifyTokenJWT = async (req, res, next) => {
       }
     });
   } else {
-    res.status(403).json({ message: "Unauthorized" });
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    next(err);
   }
 };

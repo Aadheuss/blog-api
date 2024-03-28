@@ -47,7 +47,17 @@ app.use(function (err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.json({ message: err.message });
+  res.json({
+    error: {
+      status: err.status,
+      message:
+        req.app.get("env") === "development"
+          ? err.message
+          : err.status < 500
+          ? err.message
+          : "Server error",
+    },
+  });
 });
 
 module.exports = app;
