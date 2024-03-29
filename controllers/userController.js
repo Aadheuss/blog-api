@@ -53,12 +53,13 @@ exports.user_sign_up = [
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      res.status(400).json({
-        errors: errors.errors.map((object) => {
-          return { msg: object.msg, path: object.path };
-        }),
-        message: "Failed to create User",
+      const err = new Error("Failed to create user");
+      err.status = 422;
+      err.details = errors.errors.map((object) => {
+        return { msg: object.msg, path: object.path };
       });
+
+      next(err);
     } else {
       bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
         if (err) {
@@ -97,18 +98,23 @@ exports.user_login = [
     .isLength({ max: 60 })
     .withMessage("Password must be less than 60 characters")
     .escape(),
-  verifyUserJWT,
   asyncHandler(async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        errors: errors.errors.map((object) => {
-          return { msg: object.msg, path: object.path };
-        }),
+      const err = new Error("Failed to log in");
+      err.status = 422;
+      err.details = errors.errors.map((object) => {
+        return { msg: object.msg, path: object.path };
       });
+
+      return next(err);
     }
 
+    next();
+  }),
+  verifyUserJWT,
+  asyncHandler(async (req, res, next) => {
     res.json({
       message: "Successfully logged in",
       token: req.token,

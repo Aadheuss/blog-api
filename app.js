@@ -56,6 +56,7 @@ app.use(function (err, req, res, next) {
           : err.status < 500
           ? err.message
           : "Server error",
+      details: err.details,
     },
   });
 });
